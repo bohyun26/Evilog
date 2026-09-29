@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Tickets{% endblock %}
+{% block content %}
+<h1>Buy tickets</h1>
+<p>Choose a ticket type and complete the form. This is a demo — no payment is processed.</p>
+
+<form class="ticket-form" action="{{ url_for('tickets') }}" method="post">
+  <div class="ticket-options">
+    {% for t in ticket_types %}
+    <label class="ticket-option">
+      <input type="radio" name="ticket_type" value="{{ t.id }}" required>
+      <span class="ticket-name">{{ t.name }}</span>
+      <span class="ticket-price">${{ t.price }}</span>
+      <span class="ticket-desc">{{ t.desc }}</span>
+    </label>
+    {% endfor %}
+  </div>
+  <div class="form-row">
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" required placeholder="Your name">
+  </div>
+  <div class="form-row">
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" required placeholder="you@example.com">
+  </div>
+  <button type="submit">Continue (demo)</button>
+</form>
+{% endblock %}

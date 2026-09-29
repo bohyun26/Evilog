@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Agenda{% endblock %}
+{% block content %}
+<h1>Conference agenda</h1>
+
+<div class="day-tabs">
+  {% for d in days %}
+  <a href="{{ url_for('agenda', day=d.day) }}" class="tab {% if d.day == active_day %}active{% endif %}">{{ d.label }}</a>
+  {% endfor %}
+</div>
+
+<p class="agenda-date">
+  {% for d in days if d.day == active_day %}{{ d.date }}{% endfor %}
+</p>
+
+<ul class="agenda-list">
+  {% for s in sessions %}
+  <li class="agenda-item">
+    <span class="time">{{ s.start }}–{{ s.end }}</span>
+    <div class="agenda-details">
+      <a href="{{ url_for('session_detail', session_id=s.id) }}">{{ s.title }}</a>
+      {% set sp = get_speaker(s.speaker_id) %}
+      {% if sp %}<span class="speaker-name">{{ sp.name }}</span>{% endif %}
+      <span class="meta">{{ s.room }} · {{ s.track }}</span>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% if not sessions %}
+<p>No sessions scheduled for this day.</p>
+{% endif %}
+{% endblock %}

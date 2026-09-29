@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>AI Conference 2026</h1>
+  <p class="tagline">Where research meets reality.</p>
+  <p>March 15–16, 2026 — San Francisco</p>
+  <a href="{{ url_for('tickets') }}" class="cta">Get tickets</a>
+</section>
+
+<section class="home-section">
+  <h2>Featured speakers</h2>
+  <div class="speaker-cards">
+    {% for s in speakers %}
+    <a href="{{ url_for('speaker_detail', speaker_id=s.id) }}" class="card speaker-card">
+      <span class="avatar">{{ s.avatar }}</span>
+      <h3>{{ s.name }}</h3>
+      <p class="role">{{ s.role }}</p>
+    </a>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('speakers') }}" class="link-more">View all speakers</a>
+</section>
+
+<section class="home-section">
+  <h2>Upcoming sessions</h2>
+  <ul class="session-list">
+    {% for s in sessions %}
+    <li>
+      <a href="{{ url_for('session_detail', session_id=s.id) }}">{{ s.title }}</a>
+      <span class="meta">{{ s.start }} — {{ s.room }} · {{ s.track }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  <a href="{{ url_for('sessions_list') }}" class="link-more">Browse all sessions</a>
+</section>
+{% endblock %}
