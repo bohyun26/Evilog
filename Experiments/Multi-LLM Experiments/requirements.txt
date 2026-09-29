@@ -1,4 +1,0 @@
-openai
-google-generativeai
-anthropic
-flask
