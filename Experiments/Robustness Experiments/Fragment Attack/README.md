@@ -133,24 +133,6 @@ from evilog_fragment_defense import FragmentAwareDetector, classify_verdict
 detector = FragmentAwareDetector(my_detect_fn, classify_verdict, max_buffer=32)
 ```
 
-## Offline demo
-
-The demo runs without an API key. It uses a toy detector that flags only the complete SQL injection
-payload:
-
-```bash
-python evilog_fragment_defense.py
-```
-
-```
-frag[0] "admin' O"   fragment=benign    detected=False trigger=None calls=1 memo=None
-frag[1] "R '1'="     fragment=benign    detected=False trigger=None calls=2 memo=None
-frag[2] "'1' --"     fragment=benign    detected=True trigger=reconstruct(w=3,join='') calls=2 memo=SECURITY: SQL injection detected
-```
-
-No single fragment is detected on its own. The attack is caught, and a security memo is generated,
-once the reconstructed buffer contains the full payload.
-
 ## Reference
 
 [1] D. Pasquini et al., "When AIOps Become 'AI Oops': Subverting LLM-driven IT Operations via

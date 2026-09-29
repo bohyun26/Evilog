@@ -139,15 +139,3 @@ class FragmentAwareDetector:
 
 def build_default(model: str = DEFAULT_MODEL, **kw: Any) -> FragmentAwareDetector:
     return FragmentAwareDetector(SecurityDetector(model=model), classify_verdict, **kw)
-
-
-if __name__ == "__main__":
-    def toy_detector(value: str) -> str:
-        return "SQL injection" if "' OR '1'='1" in value else "BENIGN"
-
-    layer = FragmentAwareDetector(toy_detector)
-    for i, part in enumerate(["admin' O", "R '1'=", "'1' --"]):
-        r = layer.detect_fragment(part, session_id="demo")
-        print(f"frag[{i}] {part!r:12} fragment={r['fragment_bucket']:9} "
-              f"detected={r['aggregated_detected']} trigger={r['trigger_kind']} "
-              f"calls={r['detector_calls']} memo={r['security_memo']}")
