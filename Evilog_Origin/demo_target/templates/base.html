@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Conf 2026{% endblock %} — AI Conference</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="{{ url_for('index') }}" class="logo">AI Conf 2026</a>
+      <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('agenda') }}">Agenda</a>
+        <a href="{{ url_for('sessions_list') }}">Sessions</a>
+        <a href="{{ url_for('speakers') }}">Speakers</a>
+        <a href="{{ url_for('tickets') }}">Tickets</a>
+        {% if session.get('user') %}
+          <a href="{{ url_for('profile') }}">Profile</a>
+          <a href="{{ url_for('logout') }}">Log out</a>
+        {% else %}
+          <a href="{{ url_for('login') }}">Log in</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, msg in messages %}
+          <p class="flash flash-{{ category }}">{{ msg }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>AI Conference 2026 — Demo site. All data is fictional.</p>
+  </footer>
+</body>
+</html>

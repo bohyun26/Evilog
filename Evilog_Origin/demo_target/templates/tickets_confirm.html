@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Order confirmation{% endblock %}
+{% block content %}
+<section class="confirm">
+  <h1>Order confirmation</h1>
+  <p class="success-msg">Thanks! This is a demo — no charge was made.</p>
+  <dl class="order-details">
+    <dt>Ticket</dt>
+    <dd>{{ ticket.name if ticket else order.type }} — ${{ ticket.price if ticket else 0 }}</dd>
+    <dt>Name</dt>
+    <dd>{{ order.name }}</dd>
+    <dt>Email</dt>
+    <dd>{{ order.email }}</dd>
+  </dl>
+  <a href="{{ url_for('index') }}" class="cta">Back to home</a>
+</section>
+{% endblock %}
