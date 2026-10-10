@@ -18,7 +18,7 @@ Our experiments demonstrate that Evilog maintains prompt injection protection wh
 - [Workflow](#workflow)
 - [Supported Attack Types](#supported-attack-types)
 - [Experimental Evaluation](#experimental-evaluation)
-- [Latency Evaluation](LATENCY_EVALUATION.md)
+- [Latency Evaluation](Experiments/Latency%20Measurement/LATENCY_EVALUATION.md)
 - [Repository Structure](#repository-structure)
 - [License](#license)
 - [How to Cite](#how-to-cite)
@@ -241,7 +241,26 @@ Evilog reconstructs fragmented inputs within the same session and re-evaluates t
 
 These results demonstrate that Evilog can recover attack evidence from fragmented inputs that may not be recognizable when analyzed individually.
 
-### 5. Processing Overhead
+### 5. Robustness Against Malicious Link Transformations
+
+To evaluate an application-layer attack outside the seven representative types, we tested **Server-Side Request Forgery (SSRF)** expressed in 25 transformed link forms:
+
+- Cloud metadata endpoints (AWS, GCP, Azure)
+- Encoded IP representations (decimal, hexadecimal, octal, IPv4-mapped IPv6, nip.io)
+- Internal services (Redis, Elasticsearch, etcd, Consul, admin pages, private IP ranges)
+- Dangerous URL schemes (`gopher://`, `dict://`, `file://`)
+- External malicious links (phishing/typosquatting, malware distribution, shortened URL)
+
+We added a static detector to Evilog that normalizes the destination host to a canonical IP address and flags loopback, private, link-local, and reserved ranges as well as dangerous URL schemes. The static detector never resolves DNS or fetches the URL.
+
+**Experimental Results:**
+
+- Evilog + static detector: 22/25 links detected (88%)
+- The three missed links are external malicious links (phishing/typosquatting, malware distribution, shortened URL), whose maliciousness depends on the final destination after redirection or the reputation of the external URL.
+
+For implementation details and reproduction instructions, see [Malicious Link Transformation Experiment](Experiments/Robustness%20Experiments/Malicious%20Link%20Transformation%20Experiment/README.md).
+
+### 6. Processing Overhead
 
 We measured the additional processing time introduced by Evilog's LLM-based security detector.
 
@@ -254,7 +273,7 @@ Evilog introduces additional latency because it performs an LLM-based detection 
 
 This represents a trade-off between processing efficiency and preserving attack information for incident diagnosis.
 
-For detailed experimental settings, measurement procedures, and reproduction guidance, see [Latency Evaluation](LATENCY_EVALUATION.md).
+For detailed experimental settings, measurement procedures, and reproduction guidance, see [Latency Evaluation](Experiments/Latency%20Measurement/LATENCY_EVALUATION.md).
 
 ## Repository Structure
 
@@ -264,7 +283,6 @@ Evilog/
 ├── Experiments/
 ├── cloud/
 ├── requirements.txt
-├── LATENCY_EVALUATION.md
 └── README.md
 ```
 
