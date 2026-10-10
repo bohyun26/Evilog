@@ -18,6 +18,7 @@ Our experiments demonstrate that Evilog maintains prompt injection protection wh
 - [Workflow](#workflow)
 - [Supported Attack Types](#supported-attack-types)
 - [Experimental Evaluation](#experimental-evaluation)
+- [Latency Evaluation](LATENCY_EVALUATION.md)
 - [Repository Structure](#repository-structure)
 - [License](#license)
 - [How to Cite](#how-to-cite)
@@ -253,6 +254,8 @@ Evilog introduces additional latency because it performs an LLM-based detection 
 
 This represents a trade-off between processing efficiency and preserving attack information for incident diagnosis.
 
+For detailed experimental settings, measurement procedures, and reproduction guidance, see [Latency Evaluation](LATENCY_EVALUATION.md).
+
 ## Repository Structure
 
 ```text
@@ -261,6 +264,7 @@ Evilog/
 ├── Experiments/
 ├── cloud/
 ├── requirements.txt
+├── LATENCY_EVALUATION.md
 └── README.md
 ```
 
