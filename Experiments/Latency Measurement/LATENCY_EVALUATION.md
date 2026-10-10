@@ -2,7 +2,7 @@
 
 This document describes the measurement methodology and processing overhead of Evilog compared with AIOpsShield, as reported in Section V-C (Latency Measurement) of *Evilog: Evidence-Preserving Log Sanitization for LLM-based AIOps Agents*.
 
-[← Back to the main README](README.md)
+[← Back to the main README](../../README.md)
 
 ## Objective
 
