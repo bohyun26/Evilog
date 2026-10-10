@@ -19,6 +19,7 @@ Our experiments demonstrate that Evilog maintains prompt injection protection wh
 - [Supported Attack Types](#supported-attack-types)
 - [Experimental Evaluation](#experimental-evaluation)
 - [Latency Evaluation](Experiments/Latency%20Measurement/LATENCY_EVALUATION.md)
+- [Malicious Link Transformation Experiment](Experiments/Robustness%20Experiments/Malicious%20Link%20Transformation%20Experiment/README.md)
 - [Repository Structure](#repository-structure)
 - [License](#license)
 - [How to Cite](#how-to-cite)
@@ -281,9 +282,17 @@ For detailed experimental settings, measurement procedures, and reproduction gui
 Evilog/
 ├── Evilog_Origin/
 ├── Experiments/
+│   ├── Latency Measurement/
+│   │   └── LATENCY_EVALUATION.md
+│   ├── Multi-LLM Experiments/
+│   ├── Robustness Experiments/
+│   │   └── Malicious Link Transformation Experiment/
+│   │       └── README.md
+│   └── Unseen Attack/
 ├── cloud/
-├── requirements.txt
-└── README.md
+├── LICENSE
+├── README.md
+└── requirements.txt
 ```
 
 The repository contains research artifacts and resources related to the evaluation of Evilog.
