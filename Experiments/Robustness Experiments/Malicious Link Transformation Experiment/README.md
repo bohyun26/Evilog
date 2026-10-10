@@ -35,7 +35,7 @@ a hostname), falls in a loopback, private, link-local, reserved or unspecified r
 ## Run
 
 ```bash
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 export OPENAI_API_KEY=sk-...          # Windows cmd: set OPENAI_API_KEY=sk-...
 
 python run_ssrf_eval.py --controls    # main result, saved to results/
