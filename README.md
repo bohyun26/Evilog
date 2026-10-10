@@ -284,5 +284,3 @@ If you use Evilog or its experimental artifacts in your research, please cite ou
     url = {[Paper URL]}
 }
 ```
-
-The citation entry will be updated with the official publication details.
