@@ -268,7 +268,7 @@ The repository contains research artifacts and resources related to the evaluati
 
 ## License
 
-The project license will be specified following confirmation by the copyright holders.
+Apache-2.0 license
 
 ## How to Cite
 
