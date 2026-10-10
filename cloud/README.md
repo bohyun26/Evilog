@@ -192,5 +192,4 @@ file, not across files.
 - **Fault-injector lines are dropped.** The app's own `incident.started` /
   `incident.resolved` announcements name the scenario and are removed before
   curation (`--keep-instrumentation` restores them).
-- **Naming.** Evilog was called "A2-fix" during development. The harness file
-  `a2_fix_reattack.py`, referenced in a few comments, keeps that name.
+  
