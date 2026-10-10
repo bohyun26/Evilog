@@ -15,7 +15,7 @@ Kubernetes/Docker.
 ## 1. Layout
 
 ```
-aiops_blindness_artifact/
+Evilog_Origin/
 ├── README.md            # this file
 ├── requirements.txt
 ├── THIRD_PARTY.md       # licensing: AIOpsShield (fetch) vs demo_target (Apache-2.0, bundled)
