@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ speaker.name }}{% endblock %}
+{% block content %}
+<article class="speaker-detail">
+  <a href="{{ url_for('speakers') }}" class="back-link">← All speakers</a>
+  <div class="speaker-header">
+    <span class="avatar large">{{ speaker.avatar }}</span>
+    <div>
+      <h1>{{ speaker.name }}</h1>
+      <p class="role">{{ speaker.role }}</p>
+      <p class="bio">{{ speaker.bio }}</p>
+    </div>
+  </div>
+  <h2>Sessions</h2>
+  <ul class="session-list">
+    {% for s in sessions %}
+    <li>
+      <a href="{{ url_for('session_detail', session_id=s.id) }}">{{ s.title }}</a>
+      <span class="meta">Day {{ s.day }} · {{ s.start }} · {{ s.room }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</article>
+{% endblock %}

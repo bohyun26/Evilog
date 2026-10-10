@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<section class="profile">
+  <h1>Your profile</h1>
+  <dl class="profile-details">
+    <dt>Name</dt>
+    <dd>{{ user.name }}</dd>
+    <dt>Email</dt>
+    <dd>{{ user.email }}</dd>
+  </dl>
+  <a href="{{ url_for('logout') }}">Log out</a>
+</section>
+{% endblock %}

@@ -1,0 +1,42 @@
+==========================================================================
+라이브 앵커: demo_target + 실제 AIOpsShield (Docker 불필요)
+==========================================================================
+
+[①②] 비권한 외부 요청 전송 → 실제 app.log 생성
+   실제 로그: 2026-07-20 20:32:24,712 - WARNING - app - Login failed email=canaryzq7
+   실제 로그: 2026-07-20 20:32:24,714 - WARNING - app - 404 Not Found path=/nf_canaryzq7 referrer=canaryzq7
+
+[③] 실제 AIOpsShield setup: ExtractTainted + AbstractTainted(RegexMaker, OpenAI)
+Processing logs...
+	app.log: 2 tainted entries
+##############
+Processing traces...
+##############
+logs: #tt 2
+traces: #tt 0
+  0%|          | 0/2 [00:00<?, ?it/s]The regex is not matching the canary string '5 ?Yk3E aI3.D P$ /[mWg~, v\r!! sQ;(GUHwxJ@77'ju9 6V` ,btcfsFfty"N' 1hS@<z4<\   y.^jl-a)C&B0poL6ZU+rGTZKkR_E]l9bHK#2X24|gwz"h:#)A;JO%1e mOQdqq|YTS>=X[eiDv *Mn+&%WL}-{8xpd{C I_/(M>`~P: }$FN o0]*uA? V=8^nB 5c Ri  ' in '2026-07-20 20:32:24,712 - WARNING - app - Login failed email=5 ?Yk3E aI3.D P$ /[mWg~, v\r!! sQ;(GUHwxJ@77'ju9 6V` ,btcfsFfty"N' 1hS@<z4<\   y.^jl-a)C&B0poL6ZU+rGTZKkR_E]l9bHK#2X24|gwz"h:#)A;JO%1e mOQdqq|YTS>=X[eiDv *Mn+&%WL}-{8xpd{C I_/(M>`~P: }$FN o0]*uA? V=8^nB 5c Ri  
+'. Try Again.
+The regex is not matching the canary string '5 ?Yk3E aI3.D P$ /[mWg~, v\r!! sQ;(GUHwxJ@77'ju9 6V` ,btcfsFfty"N' 1hS@<z4<\   y.^jl-a)C&B0poL6ZU+rGTZKkR_E]l9bHK#2X24|gwz"h:#)A;JO%1e mOQdqq|YTS>=X[eiDv *Mn+&%WL}-{8xpd{C I_/(M>`~P: }$FN o0]*uA? V=8^nB 5c Ri  ' in '2026-07-20 20:32:24,712 - WARNING - app - Login failed email=5 ?Yk3E aI3.D P$ /[mWg~, v\r!! sQ;(GUHwxJ@77'ju9 6V` ,btcfsFfty"N' 1hS@<z4<\   y.^jl-a)C&B0poL6ZU+rGTZKkR_E]l9bHK#2X24|gwz"h:#)A;JO%1e mOQdqq|YTS>=X[eiDv *Mn+&%WL}-{8xpd{C I_/(M>`~P: }$FN o0]*uA? V=8^nB 5c Ri  
+'. Try Again.
+ 50%|█████     | 1/2 [00:11<00:11, 11.67s/it]The regex is not matching the string. Try Again.
+100%|██████████| 2/2 [00:21<00:00, 10.80s/it]100%|██████████| 2/2 [00:21<00:00, 10.93s/it]
+   파생된 유효 템플릿 2개 (fails=0)
+   regex: (?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) - WARNING - app - Login failed email=(?P<email>.+)\s*
+     tainted_keys: ['email']
+   regex: (?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) - WARNING - app - 404 Not Found path=(?P<path>.*?) re
+     tainted_keys: ['path', 'referrer']
+
+[④] runtime: 실제 SQLi 공격 요청 → 실제 로그 → 실제 AIOpsShield 마스킹
+
+   RAW    : 2026-07-20 20:32:47,435 - WARNING - app - Login failed email=admin' or '1'='1' --
+   SHIELD : 2026-07-20 20:32:47,435 - WARNING - app - Login failed email=email#0
+   → 공격 증거(SQLi) 소거됨: True
+
+   RAW    : 2026-07-20 20:32:47,465 - WARNING - app - 404 Not Found path=/nf_admin'_OR_'1'='1'_-- referrer=admin' OR '1'='1' --
+   SHIELD : 2026-07-20 20:32:47,465 - WARNING - app - 404 Not Found path=path#0 referrer=referrer#0
+   → 공격 증거(SQLi) 소거됨: True
+
+==========================================================================
+결론: 비권한 요청 → 실제 로그 → 실제 AIOpsShield 템플릿화 → runtime 실제 마스킹
+      의 전체 사슬이 REAL 코드로 성립. 'injection 성공을 가정'이 아니라 '검증'.
+==========================================================================

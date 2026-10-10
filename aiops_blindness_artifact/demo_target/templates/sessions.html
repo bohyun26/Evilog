@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Sessions{% endblock %}
+{% block content %}
+<h1>Sessions</h1>
+
+<form class="search-form" action="{{ url_for('sessions_list') }}" method="get">
+  <input type="search" name="q" value="{{ query }}" placeholder="Search by title, track, speaker…" aria-label="Search sessions">
+  <button type="submit">Search</button>
+</form>
+
+<ul class="session-list sessions-page">
+  {% for s in sessions %}
+  <li class="session-row">
+    <a href="{{ url_for('session_detail', session_id=s.id) }}">{{ s.title }}</a>
+    {% set sp = get_speaker(s.speaker_id) %}
+    <span class="meta">
+      {{ s.start }}–{{ s.end }} · {{ s.room }} · {{ s.track }}
+      {% if sp %} · {{ sp.name }}{% endif %}
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+{% if not sessions %}
+<p>No sessions match your search.</p>
+{% endif %}
+{% endblock %}

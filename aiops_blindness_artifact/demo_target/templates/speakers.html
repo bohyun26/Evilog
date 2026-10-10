@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Speakers{% endblock %}
+{% block content %}
+<h1>Speakers</h1>
+<div class="speaker-cards">
+  {% for s in speakers %}
+  <a href="{{ url_for('speaker_detail', speaker_id=s.id) }}" class="card speaker-card">
+    <span class="avatar">{{ s.avatar }}</span>
+    <h3>{{ s.name }}</h3>
+    <p class="role">{{ s.role }}</p>
+    <p class="bio-short">{{ s.bio[:80] }}{% if s.bio|length > 80 %}…{% endif %}</p>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

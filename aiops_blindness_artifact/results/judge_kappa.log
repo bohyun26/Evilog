@@ -1,0 +1,84 @@
+########## 1) κ N=60 + 부트스트랩 CI ##########
+====================================================================================
+판정자 신뢰도: 키워드 규칙 vs 독립 LLM 판정자 (Cohen's κ)
+====================================================================================
+Processing logs...
+	app.log: 2 tainted entries
+##############
+Processing traces...
+##############
+logs: #tt 2
+traces: #tt 0
+
+  0%|          | 0/2 [00:00<?, ?it/s]The regex is not matching the string. Try Again.
+
+ 50%|█████     | 1/2 [00:09<00:09,  9.37s/it]
+100%|██████████| 2/2 [00:13<00:00,  6.00s/it]
+100%|██████████| 2/2 [00:13<00:00,  6.50s/it]
+
+  case                             GT   키워드    LLM   일치
+  sqli/preserved/gpt               ATK  YES    YES   ✓
+  sqli/masked/gpt                  BLND no     no    ✓
+  sqli/preserved/gpt               ATK  YES    YES   ✓
+  sqli/masked/gpt                  BLND no     no    ✓
+  blind_or/preserved/gpt           ATK  YES    YES   ✓
+  blind_or/masked/gpt              BLND no     no    ✓
+  blind_or/preserved/gpt           ATK  YES    YES   ✓
+  blind_or/masked/gpt              BLND no     no    ✓
+  blind_and/preserved/gpt          ATK  YES    YES   ✓
+  blind_and/masked/gpt             BLND YES    no    ✗<<
+  blind_and/preserved/gpt          ATK  YES    YES   ✓
+  blind_and/masked/gpt             BLND no     no    ✓
+  union/preserved/gpt              ATK  YES    YES   ✓
+  union/masked/gpt                 BLND YES    no    ✗<<
+  union/preserved/gpt              ATK  YES    YES   ✓
+  union/masked/gpt                 BLND no     no    ✓
+  time_sqli/preserved/gpt          ATK  YES    YES   ✓
+  time_sqli/masked/gpt             BLND no     no    ✓
+  time_sqli/preserved/gpt          ATK  YES    YES   ✓
+  time_sqli/masked/gpt             BLND no     no    ✓
+  stacked/preserved/gpt            ATK  YES    YES   ✓
+  stacked/masked/gpt               BLND no     no    ✓
+  stacked/preserved/gpt            ATK  YES    YES   ✓
+  stacked/masked/gpt               BLND no     no    ✓
+  auth_bypass/preserved/gpt        ATK  YES    YES   ✓
+  auth_bypass/masked/gpt           BLND no     no    ✓
+  auth_bypass/preserved/gpt        ATK  YES    YES   ✓
+  auth_bypass/masked/gpt           BLND no     no    ✓
+  cmdi/preserved/gpt               ATK  YES    YES   ✓
+  cmdi/masked/gpt                  BLND no     no    ✓
+  cmdi/preserved/gpt               ATK  YES    YES   ✓
+  cmdi/masked/gpt                  BLND no     no    ✓
+  cmdi_subsh/preserved/gpt         ATK  YES    YES   ✓
+  cmdi_subsh/masked/gpt            BLND no     no    ✓
+  cmdi_subsh/preserved/gpt         ATK  YES    YES   ✓
+  cmdi_subsh/masked/gpt            BLND no     no    ✓
+  cmdi_nc/preserved/gpt            ATK  YES    YES   ✓
+  cmdi_nc/masked/gpt               BLND no     no    ✓
+  cmdi_nc/preserved/gpt            ATK  YES    YES   ✓
+  cmdi_nc/masked/gpt               BLND no     no    ✓
+  xss/preserved/gpt                ATK  YES    YES   ✓
+  xss/masked/gpt                   BLND no     no    ✓
+  xss/preserved/gpt                ATK  YES    YES   ✓
+  xss/masked/gpt                   BLND no     no    ✓
+  xss_img/preserved/gpt            ATK  YES    YES   ✓
+  xss_img/masked/gpt               BLND no     no    ✓
+  xss_img/preserved/gpt            ATK  YES    YES   ✓
+  xss_img/masked/gpt               BLND no     no    ✓
+  log4shell/preserved/gpt          ATK  YES    YES   ✓
+  log4shell/masked/gpt             BLND no     no    ✓
+  log4shell/preserved/gpt          ATK  YES    YES   ✓
+  log4shell/masked/gpt             BLND no     no    ✓
+  log4shell2/preserved/gpt         ATK  YES    YES   ✓
+  log4shell2/masked/gpt            BLND YES    no    ✗<<
+  log4shell2/preserved/gpt         ATK  YES    YES   ✓
+  log4shell2/masked/gpt            BLND no     no    ✓
+  nosql/preserved/gpt              ATK  YES    YES   ✓
+  nosql/masked/gpt                 BLND no     no    ✓
+  nosql/preserved/gpt              ATK  YES    YES   ✓
+  nosql/masked/gpt                 BLND no     no    ✓
+
+  N=60  키워드↔LLM 원시일치 po=0.950  Cohen's κ=0.900  [부트스트랩 95% CI 0.769–1.000]
+  지상참값 대비 정확도 — 키워드 규칙=0.950  LLM 판정자=1.000
+  => κ=0.900 (CI 0.77–1.00) = 거의 완전 일치(≥.81). N=60로 CI가 좁아 자동 키워드 판정의 신뢰성이 견고.
+====================================================================================

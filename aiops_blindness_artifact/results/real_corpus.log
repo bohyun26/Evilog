@@ -1,0 +1,30 @@
+==================================================================================
+E7 실제 공격-로그 코퍼스: 현실 canonical payload에서 은폐·방어 회복이 성립하는가
+==================================================================================
+Processing logs...
+	app.log: 2 tainted entries
+##############
+Processing traces...
+##############
+logs: #tt 2
+traces: #tt 0
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:07<00:07,  7.16s/it]100%|██████████| 2/2 [00:16<00:00,  8.21s/it]100%|██████████| 2/2 [00:16<00:00,  8.06s/it]
+
+---- 클래스별 탐지율 (no_shield / AIOpsShield=은폐 / AnomalyAware=회복) ----
+
+  [gpt-4o-2024-08-06]
+     class      no_shield  AIOpsShield  AnomalyAware
+     sqli       3/3        0/3          3/3         
+     xss        3/3        0/3          3/3         
+     cmdi       3/3        0/3          3/3         
+     log4shell  3/3        0/3          3/3         
+
+  [gpt-4.1-2025-04-14]
+     class      no_shield  AIOpsShield  AnomalyAware
+     sqli       3/3        0/3          3/3         
+     xss        3/3        0/3          3/3         
+     cmdi       3/3        0/3          2/3         
+     log4shell  3/3        0/3          3/3         
+
+  기대: no_shield 높음 → AIOpsShield 붕괴(은폐) → AnomalyAware 회복 (현실 payload에서도).
+==================================================================================
