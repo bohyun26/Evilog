@@ -1,139 +1,146 @@
 # Evilog: Fragment-Aware Detection
 
-This directory contains the fragment-attack defense of **Evilog** (*Evidence-Preserving Log
-Sanitization for LLM-based AIOps Agents*). It corresponds to **Section V-E-1 (Fragment attack)** of
-the paper.
+This directory contains the fragment-aware attack detection component of **Evilog** (*Evidence-Preserving Log Sanitization for LLM-based AIOps Agents*). It supports the experiment described in **Section V-E-1 (Fragment Attack)** of the paper.
 
-## Background
+[← Back to the main README](../../README.md)
 
-Evilog uses a **detect-then-mask** scheme. Before AIOpsShield masks a user-controlled log field,
-Evilog passes the value to an LLM-based security detector. If the detector finds an
-application-layer attack, Evilog masks the original string and keeps a trustworthy security memo
-(for example, `SECURITY: SQLi detected`) for the AIOps agent.
+## Overview
 
-The detector inspects **one input value at a time**. An attacker can split an attack payload into
-several fragments and send them as separate inputs. A single fragment may not carry enough of the
-payload to identify the attack.
+Evilog uses a **detect-then-mask** approach: it checks user-controlled log values for application-layer attack evidence before AIOpsShield masks them. When an attack is identified, Evilog masks the original input and retains its type in a security memo (e.g., `SECURITY: SQLi detected`) for downstream diagnosis.
 
-## Defense: per-session buffer and reconstruction
+Fragmentation presents a challenge because an attack payload may be submitted as multiple separate inputs. Individual fragments may appear benign even though their ordered combination contains a recognizable attack. The fragment-aware component maintains a **per-session buffer**, reconstructs the input, and checks the reconstructed candidate before sanitization.
 
-Evilog inspects user input before masking. It stores fragments **in order** in a per-session
-buffer, reconstructs them, and checks the reconstruction for an attack again.
+## Detection Workflow
 
+```text
+User-controlled input fragment
+           |
+           v
+Append to the session buffer (max. 32 values)
+           |
+           v
+Build candidates: individual fragment + ordered reconstruction
+           |
+           v
+LLM-based security detector (GPT-4o-mini)
+           |
+      Attack found?
+       /       \
+     Yes        No
+      |          |
+Generate security  No security memo
+memo with type      |
+       \         /
+        v       v
+      AIOpsShield masking
+               |
+               v
+      Sanitized log -> AIOps agent
 ```
-user input (fragment)
-   -> append to per-session buffer (up to 32 values)
-   -> candidates: the fragment itself + ordered reconstruction of the buffer
-   -> security detector (unchanged)
-   -> any candidate is an attack  => security memo "SECURITY: <type> detected"
-   -> masking (AIOpsShield)
-```
 
-- The buffer holds up to **32 input values**. The full attack pattern can therefore be recovered even
-  when no single fragment is enough to identify the attack.
-- The security detector itself is **not modified**. Its prompt, model (`gpt-4o-mini`) and
-  constrained output format are the same as in the rest of Evilog.
-- The default reconstruction is a **lossless, in-order join** (`"".join`). It rebuilds exactly what
-  was sent, in the order it was sent. Joining benign fragments only gives back the benign original,
-  so reconstruction does not create attacks that weren't there.
-- Optionally, `window_sizes` limits reconstruction to the most recent *w* fragments, and
-  `join_variants` adds separators such as `" "` or `"\n"` (broader coverage, higher false-positive
-  risk).
+**Implementation details**
 
-## Results (paper, Section V-E-1)
+- **Buffer:** Up to 32 input values per session; inputs are reconstructed in arrival order.
+- **Detector:** The underlying Evilog security detector and its constrained verdict format are reused rather than retrained.
+- **Default reconstruction:** `"".join(...)`, preserving the order and literal content of the received fragments without inserting separators.
+- **Optional configuration:** `window_sizes` can limit reconstruction to recent fragments; `join_variants` can add separators such as spaces or newlines. These options may change detection behavior and false-positive risk and are not claimed as independently validated in the paper.
+- **Session scope:** Use a consistent `session_id` for fragments from one session; reset buffers between independent test cases to avoid cross-case contamination.
 
-Setup:
-- **Attacks**: the seven application-layer attacks (SQL injection, command injection, XSS,
-  Log4Shell, NoSQL injection, LDAP injection, SSTI).
-- **Injection fields**: the login-identifier field. Log4Shell was injected into the Referer field.
-- **Fragmentation schemes (5)**: token, whitespace, operator, fixed-length and random. The
-  fixed-length scheme splits every *n* characters. The random scheme splits into pieces of random
-  length.
-- **Total**: 7 attacks × 5 schemes = **35 combinations**.
+Reconstructing benign fragments is **not**, by itself, a guarantee against false positives. Detection accuracy depends on the detector and the way inputs are grouped into sessions.
 
-| Condition | Detected | Rate |
-|---|---|---|
-| Without AIOpsShield | 32 / 35 | 91.4% |
-| AIOpsShield [1] | – | attack evidence masked, attack type not identified |
+## Experimental Setup (Paper, Section V-E-1)
+
+The robustness evaluation used **seven application-layer attacks** and **five fragmentation schemes**, for **35 attack–fragmentation combinations**.
+
+| Setting | Configuration |
+|---|---|
+| Attack types | SQL injection, command injection, XSS, Log4Shell, NoSQL injection, LDAP injection, SSTI |
+| Injection fields | Login-identifier field for the attacks other than Log4Shell; HTTP `Referer` for Log4Shell |
+| Fragmentation | Token, whitespace, operator, fixed-length, random |
+| Buffer limit | 32 values per session |
+| Security detector | GPT-4o-mini in the evaluated Evilog implementation |
+
+**Fragmentation schemes:**
+
+- **Token:** Split at token boundaries.
+- **Whitespace:** Split according to whitespace boundaries.
+- **Operator:** Split around operators in the payload.
+- **Fixed-length:** Divide into fragments of a fixed number of characters.
+- **Random-length:** Divide into fragments whose lengths are randomly determined.
+
+For each combination, input fragments are submitted in sequence under the same session identifier. This lets the detector evaluate both the individual fragment and the reconstructed sequence.
+
+## Experimental Results
+
+| Defense condition | Detected combinations | Detection rate |
+|---|---:|---:|
+| No Defense | 32 / 35 | 91.4% |
+| AIOpsShield | Attack evidence masked; attack type not identified in the evaluated fragmented cases | — |
 | **Evilog (fragment-aware)** | **35 / 35** | **100%** |
 
-- Without AIOpsShield, detection failed on the **token** fragmentation of NoSQL injection, LDAP
-  injection and SSTI. The full pattern was hard to identify from the individual fragments alone.
-  Evilog detected all three through reconstruction.
-- For the token fragmentation of LDAP injection, all **14** individual fragments were judged
-  benign, but Evilog detected LDAP injection from the reconstructed input.
-- **Cost**: reconstruction needs a per-session buffer and extra detector calls. With the default
-  settings, each fragment costs up to 2 detector calls: one for the fragment and one for the
-  reconstruction. This adds processing time and compute compared with masking alone.
+Under No Defense, detection failed for **token-fragmented NoSQL injection, LDAP injection, and SSTI**. Evilog identified these cases after reconstructing fragments from the same session. In the LDAP injection example, **all 14 individual fragments were classified as benign**, yet the reconstructed input was detected as LDAP injection.
 
-## Code (`evilog_fragment_defense.py`)
+The **35/35** result applies to the reported attack types and fragmentation strategies; it does not establish universal detection of unseen fragmentation patterns or attacks.
 
-| Name | Description |
+**Processing overhead:** Maintaining the buffer and checking reconstructed candidates adds detector calls and computational cost. Under the documented default approach, checking an individual fragment and one reconstruction can require up to **two detector calls per input**; this is a description of the component's expected call pattern, not a separate measured latency result. For the paper's measured overall sanitization overhead, see [Latency Evaluation](../Latency%20Measurement/LATENCY_EVALUATION.md).
+
+## Implementation Reference
+
+The following interface names are described for `evilog_fragment_defense.py`. Check the actual Python file and its location in the repository before treating the examples as executable reproduction instructions.
+
+| Name | Purpose |
 |---|---|
-| `DETECTOR_SYSTEM_PROMPT` | System prompt of the Evilog security detector (attack-type taxonomy, constrained output) |
-| `classify_verdict(verdict)` | Normalizes a raw detector verdict into `benign` / `instruction` / `attack` |
-| `security_memo(verdict)` | Builds the security memo, `SECURITY: <type> detected` |
-| `SecurityDetector` | LLM-based security detector: one call per value, returns the raw verdict. The default model is `gpt-4o-mini`. `use_cache=False` (default) keeps every call independent. |
-| `FragmentAwareDetector` | Per-session buffer and reconstruction layer that wraps a detector |
-| `build_default(model, **kw)` | Builds a `FragmentAwareDetector` that wraps `SecurityDetector` |
+| `DETECTOR_SYSTEM_PROMPT` | Detector instructions and supported attack taxonomy |
+| `classify_verdict(verdict)` | Map raw detector output to `benign`, `instruction`, or `attack` |
+| `security_memo(verdict)` | Format the memo `SECURITY: <type> detected` |
+| `SecurityDetector` | LLM-based detector; default model `gpt-4o-mini` |
+| `FragmentAwareDetector` | Buffer and reconstruction wrapper around a detector |
+| `build_default(model, **kw)` | Create a fragment-aware detector using the default security detector |
 
-### `FragmentAwareDetector` parameters
+### Key parameters
 
-| Parameter | Default | Description |
+| Parameter | Default | Meaning |
 |---|---|---|
-| `detect_fn` | – | `str -> raw verdict` (for example, a `SecurityDetector` instance) |
-| `classify_fn` | `classify_verdict` | raw verdict → `benign` / `instruction` / `attack` |
-| `window_sizes` | `None` | Sliding-window sizes. `None` reconstructs the whole buffer. |
-| `join_variants` | `("",)` | Join strings used for reconstruction. The default is the lossless, in-order join only. |
-| `max_buffer` | `32` | Maximum number of input values kept per session (the paper setting) |
+| `detect_fn` | Required | Function or callable returning a raw detector verdict |
+| `classify_fn` | `classify_verdict` | Normalize detector output |
+| `window_sizes` | `None` | Optionally restrict reconstruction to recent fragments |
+| `join_variants` | `("",)` | Strings used to join fragments; default concatenates without separators |
+| `max_buffer` | `32` | Maximum number of stored values per session |
 
-Methods:
-- `detect_fragment(fragment, session_id)`: adds the fragment to the session buffer, then runs the
-  detector on the fragment and on the reconstruction.
-- `reset(session_id=None)`: clears one session's buffer, or every session's buffer when `session_id`
-  is `None`.
+**Key methods:** `detect_fragment(fragment, session_id)` adds a fragment and evaluates candidates; `reset(session_id=None)` clears one buffer, or all buffers if no session is specified.
 
-### Return value of `detect_fragment`
-
-| Key | Meaning |
-|---|---|
-| `aggregated_detected` | Final decision (`True` = attack) |
-| `security_memo` | `SECURITY: <type> detected` if an attack was found, otherwise `None` |
-| `fragment_verdict_raw`, `fragment_bucket` | Verdict for the fragment alone (per-value inspection without reconstruction) |
-| `reconstruction_triggered` | `True` if the attack was caught only through reconstruction |
-| `trigger_kind`, `trigger_value`, `trigger_raw` | The first candidate classified as an attack |
-| `detector_calls` | Number of detector calls for this fragment (runtime overhead) |
-| `candidates_checked` | Every candidate checked, with its verdict |
-| `session_id`, `fragment`, `buffer_size` | Input and buffer state |
+The `detect_fragment` result provides `aggregated_detected` and `security_memo`, along with diagnostic information such as `fragment_bucket`, `reconstruction_triggered`, `detector_calls`, and `candidates_checked`. Additional returned fields depend on the implementation.
 
 ## Usage
 
-Requirements: Python 3.9+ and `openai`.
+Requirements stated for the component: **Python 3.9+** and the `openai` package.
 
 ```bash
 pip install openai
-export OPENAI_API_KEY=...
 ```
+
+Set `OPENAI_API_KEY` in your environment using your shell's environment-variable mechanism; do not commit credentials to GitHub.
+
+When running a script from the directory containing `evilog_fragment_defense.py`, the intended Python interface is:
 
 ```python
 from evilog_fragment_defense import build_default
 
-detector = build_default()                          # gpt-4o-mini security detector
+detector = build_default()
 result = detector.detect_fragment("<user input>", session_id="session-123")
+
 if result["aggregated_detected"]:
-    memo = result["security_memo"]                  # attach to the masked log
+    memo = result["security_memo"]
+    # Attach the security memo to the sanitized log.
+
+# Reset the buffer between independent cases, where appropriate.
+detector.reset("session-123")
 ```
 
-Use the same `session_id` for inputs that come from the same session, so that their fragments are
-reconstructed together. You can plug in any detector:
+Fragments belonging to the same session must use the same `session_id`. The sample above illustrates the Python API; it is **not** a complete end-to-end AIOpsShield/Flask experiment command. Full reproduction also requires the relevant application/logging pipeline and detector credentials.
 
-```python
-from evilog_fragment_defense import FragmentAwareDetector, classify_verdict
+## References
 
-detector = FragmentAwareDetector(my_detect_fn, classify_verdict, max_buffer=32)
-```
+[1] D. Pasquini et al., “When AIOps Become ‘AI Oops’: Subverting LLM-driven IT Operations via Telemetry Manipulation,” *USENIX Security Symposium*, 2026.
 
-## Reference
-
-[1] D. Pasquini et al., "When AIOps Become 'AI Oops': Subverting LLM-driven IT Operations via
-Telemetry Manipulation," USENIX Security Symposium, 2026.
+For the core evidence-preserving sanitization design and broader experimental evaluation, see the [main Evilog README](../../README.md).
