@@ -2,7 +2,7 @@
 Evilog security detector (LLM), as used in the malicious-link experiment.
 
 V2 (default) = attack-precedence taxonomy (an embedded instruction never downgrades a present attack),
-               copied verbatim from harness/a2_fix_reattack.py (_DET_SYS_V2).
+               copied verbatim from Evilog_Origin/harness/evilog.py (_DET_SYS_V2).
 V1           = original detect-then-mask prompt, copied from harness/detect_then_mask.py (_DET_SYS).
 Select with DET_PROMPT=v1 or v2.
 """
