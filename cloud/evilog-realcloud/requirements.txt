@@ -1,4 +1,0 @@
-openai>=1.40
-boto3>=1.34        # only needed when STORE_BACKEND=cloudwatch
-# Your research harness (aiopsshield/, detect_then_mask.py, causal_defense.py,
-# live_anchor.py, agentic_rca.py) is NOT installed here — point RESEARCH_PATH at it.
