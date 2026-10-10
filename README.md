@@ -1,33 +1,45 @@
 # Evilog
 
-**Evilog** is a security-enhancement approach designed to preserve critical attack evidence in LLM-driven AIOps systems while maintaining defenses against telemetry-based prompt injection attacks.
+**Evilog: Evidence-Preserving Log Sanitization for LLM-based AIOps Agents**
 
-Existing defenses, such as AIOpsShield, mitigate prompt injection by masking user-controlled content in telemetry before it reaches the LLM. However, this process may also remove critical evidence of application-layer attacks, potentially causing incident detection failures or incorrect diagnoses.
+Evilog is an evidence-preserving log sanitization technique designed to protect LLM-based AIOps agents against telemetry-based prompt injection attacks while maintaining their ability to detect application-layer attacks.
 
-Evilog addresses this limitation by identifying attack evidence before the masking process. By preserving security-relevant information, Evilog enables AIOps agents to maintain diagnostic capabilities without sacrificing prompt-injection defenses.
+Existing defenses, such as AIOpsShield, mitigate prompt injection by masking user-controlled content in telemetry before it reaches the LLM. However, this approach may also remove critical evidence of application-layer attacks, such as SQL injection, command injection, and cross-site scripting (XSS), causing AIOps agents to miss attacks or misdiagnose their root causes.
 
-Evilog was evaluated in both local and AWS cloud environments. Additional robustness experiments were conducted against fragmented application-layer attack payloads.
+To address this limitation, Evilog introduces a **detect-then-mask** approach. Before applying AIOpsShield's masking, Evilog analyzes user-controlled input to identify application-layer attacks. When an attack is detected, Evilog removes the original attack string and preserves its type as structured security metadata, enabling the AIOps agent to perform accurate diagnosis without directly processing untrusted input.
 
-## News
-
-- [Update with paper acceptance or release information]
+Our experiments demonstrate that Evilog maintains prompt injection protection while restoring application-layer attack detection capabilities across local and AWS cloud environments.
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Installation](#installation)
 - [Main Components](#main-components)
 - [Workflow](#workflow)
-- [Experiments](#experiments)
+- [Supported Attack Types](#supported-attack-types)
+- [Experimental Evaluation](#experimental-evaluation)
+- [Repository Structure](#repository-structure)
 - [License](#license)
 - [How to Cite](#how-to-cite)
+
+## Overview
+
+LLM-based AIOps agents analyze telemetry, including logs, metrics, and traces, to detect system anomalies and diagnose failures. However, because telemetry may contain externally controlled user input, it can serve as a vector for prompt injection attacks.
+
+AIOpsShield addresses this threat by identifying and masking user-controlled telemetry fields. While effective against prompt injection, this masking process can inadvertently remove essential evidence of application-layer attacks.
+
+Evilog extends this defense by analyzing user-controlled input before masking. Instead of exposing raw attack payloads to the AIOps agent, Evilog converts detected attack evidence into structured security metadata.
+
+This approach enables the AIOps agent to identify attacks while maintaining protection against prompt injection.
 
 ## Installation
 
 ### Prerequisites
 
-- Python
-- Project dependencies listed in `requirements.txt`
-- Additional environment-specific requirements for local or cloud experiments
+- Python environment
+- Access to the required LLM APIs
+- A configured application and telemetry collection environment
+- AWS resources for cloud-based experiments (optional)
 
 ### Setup
 
@@ -38,46 +50,177 @@ git clone https://github.com/bohyun26/Evilog.git
 cd Evilog
 ```
 
-**2. Install dependencies:**
+**2. Install the required dependencies:**
 
-```bash
-pip install -r requirements.txt
-```
+Configure a Python environment and install the dependencies required by the selected experiment.
 
-**3. Configure the environment:**
+**3. Configure the experimental environment:**
 
-Configure the required AIOps services, telemetry sources, and LLM settings for the selected experiment.
+Set up the target application, telemetry collection, AIOpsShield, and the LLM-based diagnostic agent.
 
-Environment-specific setup and execution instructions documented separately.
+Environment-specific configuration and execution instructions will be added as the experimental artifacts are documented.
 
 ## Main Components
 
-### Attack Evidence Detection
+### 1. Attack Evidence Detector
 
-Evilog analyzes user-controlled telemetry content before the masking process to identify evidence of application-layer attacks.
+Evilog incorporates an LLM-based security detector that analyzes user-controlled input before the masking process.
 
-This component aims to:
+The detector:
 
-- Inspect user-controlled input fields.
-- Detect security-relevant attack patterns before masking.
-- Identify attack evidence required for incident diagnosis.
-- Prevent critical diagnostic information from being lost during sanitization.
+- Inspects user-controlled fields recorded in application logs.
+- Identifies evidence of application-layer attacks.
+- Classifies detected attacks into predefined categories.
+- Returns the detected attack type in a constrained output format.
 
-### Attack Evidence Preservation
+The detector uses GPT-4o-mini in the evaluated implementation.
 
-Evilog preserves detected attack evidence while allowing the existing prompt-injection defense to sanitize other user-controlled content.
+### 2. Security Metadata Generation
 
-This process aims to:
+When an application-layer attack is detected, Evilog generates structured security metadata describing the detected attack type.
 
-- Maintain compatibility with telemetry sanitization.
-- Preserve information necessary for accurate incident diagnosis.
-- Reduce detection failures caused by the removal of attack evidence.
+For example:
 
-### Fragmented Attack Detection
+```text
+SECURITY: SQLi detected
+```
 
-Evilog supports the detection of attack payloads distributed across multiple telemetry fragments.
+This metadata is attached to the sanitized log so that the AIOps agent can identify the attack without accessing the original attack string.
 
-The robustness evaluation considers five fragmentation strategies:
+For inputs that are not classified as application-layer attacks, no security metadata is generated.
+
+### 3. Log Sanitization
+
+Evilog integrates with the existing AIOpsShield sanitization process.
+
+The original user-controlled input is masked before being delivered to the LLM-based AIOps agent.
+
+This process:
+
+- Prevents untrusted user-controlled instructions from being directly delivered to the diagnostic agent.
+- Preserves the presence and type of detected application-layer attacks.
+- Maintains the original masking behavior for inputs without detected attack evidence.
+
+### 4. Fragmented Attack Reconstruction
+
+Evilog also supports the reconstruction of attack payloads distributed across multiple input fragments.
+
+It:
+
+- Buffers user-controlled inputs associated with the same session.
+- Reconstructs fragmented input in its original order.
+- Rechecks the reconstructed input for application-layer attacks.
+- Maintains a buffer of up to 32 input fragments per session.
+
+This mechanism enables Evilog to identify attacks even when individual fragments appear benign.
+
+## Workflow
+
+Evilog follows a **detect-then-mask** pipeline.
+
+### Step 1: Telemetry Generation
+
+A web application generates logs containing operational information and potentially user-controlled input, such as login identifiers, URL paths, and HTTP headers.
+
+### Step 2: Attack Evidence Detection
+
+Before sanitization, Evilog analyzes the user-controlled input to determine whether it contains evidence of an application-layer attack.
+
+### Step 3: Security Metadata Generation
+
+If an attack is identified, Evilog records its type as security metadata.
+
+### Step 4: Input Masking
+
+AIOpsShield masks the original user-controlled input, preventing malicious instructions and raw attack payloads from reaching the diagnostic agent.
+
+### Step 5: AIOps Diagnosis
+
+The LLM-based AIOps agent analyzes the sanitized telemetry and preserved security metadata to identify the attack and diagnose the incident.
+
+### Comparison of Defense Approaches
+
+| Defense | Prompt Injection Blocking | Application-Layer Attack Detection |
+|---|---|---|
+| No Defense | No protection | Attack evidence remains visible |
+| AIOpsShield | Blocks prompt injection | May remove critical attack evidence |
+| Evilog | Blocks prompt injection | Preserves detected attack information |
+
+## Supported Attack Types
+
+Evilog was evaluated against seven application-layer attack types:
+
+| Attack Type | Description |
+|---|---|
+| SQL Injection (SQLi) | Injection of malicious SQL statements |
+| Command Injection | Execution of unintended system commands |
+| Cross-Site Scripting (XSS) | Injection of malicious scripts into web application content |
+| Log4Shell | Exploitation of Log4j-related lookup behavior |
+| NoSQL Injection | Injection targeting NoSQL database queries |
+| LDAP Injection | Manipulation of LDAP queries |
+| Server-Side Template Injection (SSTI) | Injection of malicious template expressions |
+
+Attack payloads were inserted into application fields recorded in telemetry, including login identifiers, URL paths, and HTTP Referer headers.
+
+## Experimental Evaluation
+
+We evaluated Evilog by comparing three conditions:
+
+1. **No Defense:** User-controlled input is delivered without sanitization.
+2. **AIOpsShield:** User-controlled telemetry fields are masked.
+3. **Evilog:** Application-layer attacks are detected before masking, and their types are preserved as security metadata.
+
+### 1. Main Evaluation Results
+
+The primary evaluation produced the following results:
+
+| Evaluation Metric | No Defense | AIOpsShield | Evilog |
+|---|---|---|---|
+| Prompt Injection Blocking Rate | 0% | 100% | 100% |
+| Application-Layer Attack Detection Rate | 100% | 0% | 100% |
+| Detector False-Positive Rate | N/A | N/A | 0% |
+
+These results demonstrate that Evilog maintains prompt injection protection while preserving the attack evidence required for accurate diagnosis.
+
+The reported rates correspond to the primary experimental conditions and should not be interpreted as universal detection guarantees.
+
+### 2. Local and Cloud Environments
+
+Evilog was evaluated in multiple environments to examine whether the proposed defense operates consistently across different deployment settings.
+
+**Local Environment**
+
+- Flask-based web application
+- Application-generated logs
+- AIOpsShield sanitization
+- Tool-using LLM-based diagnostic agent
+
+**AWS Cloud Environment**
+
+- Amazon Elastic Kubernetes Service (EKS)
+- Amazon Elastic Container Registry (ECR)
+- Fluent Bit for log collection
+- Amazon CloudWatch Logs for telemetry storage
+
+The experiments confirmed that Evilog could preserve attack information and maintain prompt injection blocking in both local and cloud environments under the evaluated conditions.
+
+### 3. Evaluation Across Different LLMs
+
+We further evaluated Evilog using different LLM-based diagnostic agents.
+
+| LLM | No Defense | AIOpsShield | Evilog |
+|---|---|---|---|
+| GPT-4o | 89.6% | 36.1% | 97.6% |
+| Gemini 2.5 Flash | 92.9% | 6.5% | 92.6% |
+| Claude Sonnet | 99.6% | 55.2% | 96.8% |
+
+The results show that Evilog improves application-layer attack detection compared with AIOpsShield across the evaluated models.
+
+However, detection performance varies depending on the model and attack type.
+
+### 4. Robustness Against Fragmented Attacks
+
+To evaluate robustness against fragmented attack inputs, we divided each of the seven application-layer attack payloads using five fragmentation strategies:
 
 - Token-based fragmentation
 - Whitespace-based fragmentation
@@ -85,65 +228,32 @@ The robustness evaluation considers five fragmentation strategies:
 - Fixed-length fragmentation
 - Random-length fragmentation
 
-Evilog buffers and reconstructs fragments associated with the same session and rechecks the reconstructed input for attack evidence.
+This resulted in **35 attack–fragmentation combinations**.
 
-### Telemetry Processing
+Evilog reconstructs fragmented inputs within the same session and re-evaluates the combined input before masking.
 
-Evilog is designed to operate before telemetry masking in the AIOps processing pipeline.
+**Experimental Results:**
 
-Its role is to retain relevant security evidence while limiting the exposure of untrusted user-controlled content to the LLM.
+- No Defense: 32/35 combinations detected (91.4%)
+- Evilog: 35/35 combinations detected (100%)
+- AIOpsShield: Attack evidence was masked, preventing identification of the attack type in the evaluated fragmented cases
 
-## Workflow
+These results demonstrate that Evilog can recover attack evidence from fragmented inputs that may not be recognizable when analyzed individually.
 
-Evilog follows an evidence-preserving telemetry processing workflow.
+### 5. Processing Overhead
 
-### 1. Collect Telemetry
+We measured the additional processing time introduced by Evilog's LLM-based security detector.
 
-The monitored application generates telemetry containing operational information and potentially user-controlled input.
+| Defense | Mean Processing Time |
+|---|---|
+| AIOpsShield | 2.06 µs |
+| Evilog | 791,647.89 µs |
 
-### 2. Inspect User-Controlled Content
+Evilog introduces additional latency because it performs an LLM-based detection call before masking user-controlled input.
 
-Evilog analyzes user-controlled fields to identify application-layer attack evidence before masking occurs.
+This represents a trade-off between processing efficiency and preserving attack information for incident diagnosis.
 
-### 3. Reconstruct Fragmented Inputs
-
-When attack-related content is distributed across multiple fragments, Evilog buffers and reconstructs the fragments within the same session.
-
-### 4. Preserve Attack Evidence
-
-Security-relevant evidence is retained so that it remains available for downstream incident diagnosis.
-
-### 5. Apply Telemetry Sanitization
-
-The prompt-injection defense sanitizes user-controlled telemetry content while preserving the identified attack evidence.
-
-### 6. Perform AIOps Diagnosis
-
-The processed telemetry is delivered to the LLM-driven AIOps agent for incident analysis.
-
-This workflow aims to balance prompt-injection protection and diagnostic accuracy.
-
-## Experiments
-
-Evilog was evaluated to investigate the impact of telemetry sanitization on attack diagnosis and the effectiveness of evidence preservation.
-
-### Local Environment
-
-Experiments were conducted in a local environment to compare incident diagnosis with and without evidence preservation.
-
-### AWS Cloud Environment
-
-Additional experiments were conducted in an AWS cloud environment to evaluate Evilog under cloud-based operational conditions.
-
-### Robustness Evaluation
-
-The robustness evaluation considers seven application-layer attacks and five fragmentation strategies, resulting in 35 attack–fragmentation combinations.
-
-Evilog reconstructs fragmented inputs using a buffer of up to 32 fragments associated with the same session.
-
-In the reported experiments, Evilog successfully detected all 35 combinations.
-
-### Repository Structure
+## Repository Structure
 
 ```text
 Evilog/
@@ -154,27 +264,25 @@ Evilog/
 └── README.md
 ```
 
-The repository contains experimental artifacts and resources for local and cloud-based evaluations.
+The repository contains research artifacts and resources related to the evaluation of Evilog.
 
 ## License
 
-[Specify the license selected by the project copyright holders.]
-
-If Apache-2.0 is selected, add the corresponding `LICENSE` file to the repository and replace this section with:
-
-This project is licensed under the Apache License 2.0 License. See the [LICENSE](LICENSE) file for details.
+The project license will be specified following confirmation by the copyright holders.
 
 ## How to Cite
 
-If you use Evilog in your research, please cite our paper:
+If you use Evilog or its experimental artifacts in your research, please cite our paper.
+
+**Paper:** *Evilog: Evidence-Preserving Log Sanitization for LLM-based AIOps Agents*
 
 ```bibtex
-@misc{evilog2026,
-    title = {[Full Paper Title]},
+@misc{evilog,
+    title = {Evilog: Evidence-Preserving Log Sanitization for LLM-based AIOps Agents},
     author = {[Author Names]},
-    year = {2026},
+    year = {[Publication Year]},
     url = {[Paper URL]}
 }
 ```
 
-The official citation information will be updated when the paper's bibliographic details are finalized.
+The citation entry will be updated with the official publication details.
