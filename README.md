@@ -48,7 +48,7 @@ pip install -r requirements.txt
 
 Configure the required AIOps services, telemetry sources, and LLM settings for the selected experiment.
 
-Environment-specific setup and execution instructions will be documented separately.
+Environment-specific setup and execution instructions documented separately.
 
 ## Main Components
 
