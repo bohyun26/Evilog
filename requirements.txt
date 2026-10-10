@@ -1,1 +1,6 @@
+# Evilog - confirmed dependency for the fragment-aware LLM security detector
+# Python >= 3.9
+openai
 
+# Additional dependencies for other experiments should be added only after
+# checking the corresponding Python imports and tested package versions.
