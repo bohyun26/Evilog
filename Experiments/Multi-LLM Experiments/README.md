@@ -11,7 +11,7 @@ attacks, thereby degrading the diagnosis of an AIOps agent.
 ## Directory Layout
 
 ```
-evilog_release/
+Multi-LLM Experiments/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
@@ -97,6 +97,28 @@ recovers and converges to 92%+ under Evilog.
 > trend—**high without defense → sharp drop under AIOpsShield → recovery/convergence under
 > Evilog**—reproduces consistently. The logs in `results/` are the authors' actual runs.
 
+### Analysis — why the rates differ and converge
+
+- **Why Evilog converges across models.** Evilog's detection relies on the **memo the detector
+  leaves on the raw field before masking**, not on each final model's own reasoning. Once the
+  memo is present, any final agent simply reads it, so the rate stays consistent (92%+)
+  regardless of which model is the final agent. (Detector false-positive rate: **0%** for all
+  three — see Experiment 2.)
+- **Why AIOpsShield varies so much by model.** Under masking the evidence is gone, so detection
+  falls back on each model's own inference tendency. Claude leans conservative / safety-oriented
+  and flags threats even with scarce evidence (highest under both No Defense and AIOpsShield);
+  GPT-4o reflects clear evidence faithfully but is weaker when it must self-infer (lower under
+  masking, yet highest under Evilog, where the memo is supplied); Gemini interprets input
+  literally, so once the original text is masked its inference-based detection is the lowest (6.5%).
+- **Why Evilog is not 100% (miss patterns).** Misses differ by model: GPT-4o — 6 SSTI + 2 NoSQL;
+  Claude — 6 SSTI + 2 LDAP; Gemini — spread across types, incl. 11 XSS. Two-stage explanation:
+  (1) SSTI / LDAP / XSS payloads are structurally similar to benign input, so the detector
+  misclassifies them as benign and leaves no memo; (2) without a memo, detection falls back on
+  the final agent's reasoning — GPT-4o and Claude recover all but SSTI, while Gemini cannot
+  recover and misses across several types. Attacks with distinctive forms (SQL injection,
+  command injection, Log4Shell) are reliably caught by the detector, so all three models reach
+  **≥99%**. In short, Evilog's ceiling is set by the **detector's judgment**.
+
 ## 5. Experiment 2 — Detector False-Positive Rate (FP)
 Measures whether the detector misjudges benign inputs (120 samples) as attacks.
 
@@ -129,6 +151,12 @@ Separately required (not part of the artifact):
 - `AIOpsShield` : the existing masking defense from [1]. It is **not redistributed** (its
   released code has no license). Obtain it from the base paper's official release and set
   `AIOPSSHIELD_PATH`, as described in the original artifact's `THIRD_PARTY.md`.
+
+> The original files are unmodified; use the ones from the original artifact as-is.
+
+## Reference
+[1] D. Pasquini et al., "When AIOps Become 'AI Oops': Subverting LLM-driven IT
+Operations via Telemetry Manipulation," USENIX Security 2026.
 
 > The original files are unmodified; use the ones from the original artifact as-is.
 
