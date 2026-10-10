@@ -1,5 +1,5 @@
 # Evilog
-## Evilog: Evidence-Preserving Log Sanitization for LLM-based AIOps Agents
+Evilog: Evidence-Preserving Log Sanitization for LLM-based AIOps Agents
 
 LLM-based AIOps agents diagnose incidents by analyzing logs that contain user-controlled input. To block prompt injection through that input, a prior defense (AIOpsShield) masks all user-controlled fields before the agent reads them. However, in application-layer attacks (e.g., SQL injection, XSS, Log4Shell), the user input itself is the key evidence of the attack — so masking blocks the injection but, as a side effect, conceals the attack from the agent.
 
