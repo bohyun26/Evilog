@@ -257,8 +257,8 @@ This represents a trade-off between processing efficiency and preserving attack 
 
 ```text
 Evilog/
+├── Evilog_Origin/
 ├── Experiments/
-├── aiops_blindness_artifact/
 ├── cloud/
 ├── requirements.txt
 └── README.md
