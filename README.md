@@ -45,12 +45,13 @@ This approach enables the AIOps agent to identify attacks while maintaining prot
 
 ### Setup
 
-**1. Clone the repository:**
+**1. Get the repository:**
 
-```bash
-git clone https://github.com/bohyun26/Evilog.git
+Clone or download this repository, then enter its directory:
+
+​```bash
 cd Evilog
-```
+​```
 
 **2. Install the required dependencies:**
 
@@ -300,7 +301,7 @@ The repository contains research artifacts and resources related to the evaluati
 ## License
 
 Apache-2.0 license
-
+<!--
 ## How to Cite
 
 If you use Evilog or its experimental artifacts in your research, please cite our paper.
@@ -315,3 +316,4 @@ If you use Evilog or its experimental artifacts in your research, please cite ou
     url = {[Paper URL]}
 }
 ```
+-->
