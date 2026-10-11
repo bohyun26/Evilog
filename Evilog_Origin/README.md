@@ -142,7 +142,7 @@ so there is no "we only went easy on our defense" bias. The result comes in thre
 > rule closes the remaining instruction-wrap boundary. Residual cost is a small false-positive rate (1/8 on
 > tricky benign values), reported honestly above.
 
-### Judge reliability & robustness (reviewer rebuttals)
+### Judge reliability & robustness 
 | Script | What it shows |
 |---|---|
 | `judge_kappa.py` | The automated keyword-indicator judge is not arbitrary: **Cohen's κ = 0.900 (bootstrap 95% CI 0.77–1.00, N=60)** vs an independent LLM judge (keyword accuracy 0.95, LLM 1.00 vs ground truth). |
