@@ -1,14 +1,3 @@
-/home/bohyun/.local/lib/python3.10/site-packages/google/api_core/_python_version_support.py:254: FutureWarning: You are using a Python version (3.10.12) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
-  warnings.warn(message, FutureWarning)
-/mnt/c/Aiops_test/aiops_blindness_artifact/harness/Evilog_origin_gemi.py:16: FutureWarning: 
-
-All support for the `google.generativeai` package has ended. It will no longer be receiving 
-updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
-See README for more details:
-
-https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
-
-  import google.generativeai as genai                 # ★ Gemini SDK (최종 에이전트용)
 ============================================================================================================
 [방어 나란히 paired · 최종=Gemini · 4세트] 같은 공격 → 방어없음 vs AIOpsShield vs Evilog 최종 탐지율
 최종 모델: ['gemini-2.5-flash']   |   방어 전부 원본   |   공격셋: 앱계층 7공격(CRLF 제외)   |   공격생성: gpt-4o-mini   |   출력=요약
